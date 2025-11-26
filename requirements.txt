@@ -1,0 +1,11 @@
+torch==2.0.1  
+torchvision==0.15.2
+pandas
+numpy
+matplotlib
+seaborn
+opencv-python  
+scikit-learn 
+tqdm
+pillow 
+flask  
