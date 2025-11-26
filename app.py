@@ -130,8 +130,8 @@ st.markdown("Upload a retinopathy image and get an instant AI diagnosis using a 
 def load_model_once():
     with st.spinner("Loading AI models..."):
         binary_model, severity_model, used_device = load_models(
-            binary_path=r"C:\Users\pc\Desktop\DR_project\models\final_binary_model.pth",
-            severity_path=r"C:\Users\pc\Desktop\DR_project\models\final_severity_model.pth",
+            binary_path=r"models\final_binary_model.pth",
+            severity_path=r"models\final_severity_model.pth",
             device=None
         )
     return binary_model, severity_model, used_device
