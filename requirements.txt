@@ -8,4 +8,4 @@ opencv-python
 scikit-learn 
 tqdm
 pillow 
-flask  
+streamlit  
