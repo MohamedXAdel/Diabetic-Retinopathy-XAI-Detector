@@ -1,6 +1,7 @@
 import google.generativeai as genai
 import io
 import base64
+import numpy as np
 
 
 
