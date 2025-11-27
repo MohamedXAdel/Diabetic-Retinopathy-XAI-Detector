@@ -238,6 +238,6 @@ if uploaded_file:
 # Footer
 st.markdown("---")
 st.markdown(
-    "<p style='text-align:center; color:gray;'>Powered by EfficientNet • Grad-CAM Explainability • APTOS 2019</p>",
+    "<p style='text-align:center; color:gray;'>Powered by EfficientNet • Explainability AI • APTOS 2019</p>",
     unsafe_allow_html=True
 )
