@@ -194,9 +194,6 @@ if uploaded_file:
             orig, overlay = overlay_heatmap(temp_path, heatmap)
             img_np = np.array(pil_image.resize((224,224)))
             lime_img, _ = lime_explainer.explain(img_np)
-    
-
-            os.remove(temp_path)
 
         # -----------------------------------------------------------
         # Result Card
