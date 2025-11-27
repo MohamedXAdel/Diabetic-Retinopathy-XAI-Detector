@@ -245,12 +245,60 @@ if uploaded_file:
             st.write(ai_explanation_text)
 
 
-
-if st.checkbox("Open DR Chatbot", key="toggle_chat"):
+# Chat Panel 
+def show_chatbot():
     from Chatbot import init_dr_chatbot
     init_dr_chatbot()
-           
-    
+
+# Custom HTML + CSS for floating button
+floating_button_html = """
+<div class="chatbot-fab" id="chatbot-fab">
+    💬
+</div>
+
+<script>
+    const fab = document.getElementById('chatbot-fab');
+    fab.addEventListener('click', () => {
+        // This triggers Streamlit to rerun and open the chatbot
+        Streamlit.setComponentValue(true);
+    });
+</script>
+"""   
+
+if "open_chatbot" not in st.session_state:
+    st.session_state.open_chatbot = False
+
+# Render the floating button
+chat_trigger = st.components.v1.html(
+    floating_button_html,
+    height=0,
+    width=0
+)
+
+# Detect click via component return value or session state
+if chat_trigger or st.session_state.open_chatbot:
+    st.session_state.open_chatbot = True  # Keep it open once clicked
+
+# Show the chatbot in a modal-like container when opened
+if st.session_state.open_chatbot:
+    with st.container():
+        st.markdown("""
+        <div class="chat-modal">
+            <div class="chat-box">
+                <button class="close-btn" onclick="document.getElementById('close-chat').click()">✕</button>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Hidden button to close via JS
+        if st.button("Close Chat", key="close_chat_hidden", on_click=lambda: st.session_state.update(open_chatbot=False)):
+            pass
+
+        # show the chatbot inside the modal
+        st.markdown("<div style='padding: 20px; height: 100%;'>", unsafe_allow_html=True)
+        show_chatbot()
+        st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
