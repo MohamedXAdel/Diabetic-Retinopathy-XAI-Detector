@@ -149,8 +149,9 @@ st.markdown("---")
 @st.cache_resource
 def load_model_once():
     return load_models(
-        binary_path=r"C:\Users\pc\Desktop\DR_project\models\final_binary_model.pth",
-        severity_path=r"C:\Users\pc\Desktop\DR_project\models\final_severity_model.pth"
+        base_dir = os.path.dirname(os.path.abspath(__file__)),
+        binary_path = os.path.join(base_dir, "models", "final_binary_model.pth"),
+        severity_path = os.path.join(base_dir, "models", "final_severity_model.pth")
     )
 
 binary_model, severity_model, device = load_model_once()
