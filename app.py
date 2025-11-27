@@ -245,25 +245,11 @@ if uploaded_file:
             st.write(ai_explanation_text)
 
 
-# Chat Panel (hidden by default)
-display = "block" if st.session_state.chat_open else "none"
 
-with st.container():
-    st.markdown(f"""
-    <div id="chatPanel" class="chat-container" style="display: {display};">
-        <div class="chat-header">
-            Diabetic Retinopathy Assistant
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    if st.session_state.chat_open:
-        with st.container():
-            try:
-                from Chatbot import init_dr_chatbot
-                init_dr_chatbot()
-            except Exception as e:
-                st.error(e)
+if st.checkbox("Open DR Chatbot", key="toggle_chat"):
+    from Chatbot import init_dr_chatbot
+    init_dr_chatbot()
+           
     
 
 
