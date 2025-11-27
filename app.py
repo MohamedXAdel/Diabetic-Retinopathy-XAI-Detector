@@ -12,6 +12,7 @@ import torch.nn as nn
 from src.preprocess import preprocess_image
 from Grad_Cam_XAI import GradCAM, overlay_heatmap
 from LIME_XAI import LIME_Explainer
+from AI_Explanation import pil_to_base64,model,prompt
 
 # -----------------------------------------------------------
 # Device Selection
@@ -233,6 +234,24 @@ if uploaded_file:
         with col3:
             st.markdown("**LIME Visualization**")
             st.image(lime_img, width=260)
+
+
+        # -----------------------------------------------------------
+        # AI Explnation 
+        # -----------------------------------------------------------
+        original_image_base64 = pil_to_base64(pil_image)
+        gradcam_image_base64 = pil_to_base64(overlay)
+        lime_image_base64 = pil_to_base64(lime_img)
+
+        response = model.generate_content([
+            {"text": prompt.format(prediction=pred_text)},
+            {"image": original_image_base64, "description": "Original fundus image"},
+            {"image": gradcam_image_base64, "description": "Grad-CAM heatmap"},
+            {"image": lime_image_base64, "description": "LIME explanation"}
+        ])
+        ai_explanation_text = response.text
+        st.markdown("### 📝 AI Explanation")
+        st.write(ai_explanation_text)
 
 
 # Footer
