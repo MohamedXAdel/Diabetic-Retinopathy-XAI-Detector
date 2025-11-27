@@ -25,11 +25,6 @@ def img_to_part(img):
                         }
                     }
 
-
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-
-model = genai.GenerativeModel("gemini-2.5-flash")
-
 prompt = """
 You are an expert ophthalmologist AI assistant. 
 Analyze the uploaded retinal fundus photograph and the two explainability maps (Grad-CAM and LIME).
