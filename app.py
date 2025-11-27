@@ -10,20 +10,26 @@ from PIL import Image as PILImage
 from torchvision import models,transforms
 import torch.nn as nn
 from src.preprocess import preprocess_image
+from Grad_Cam_XAI import GradCAM, overlay_heatmap
+from LIME_XAI import LIME_Explainer
 
-
-
-
+# -----------------------------------------------------------
+# Device Selection
+# -----------------------------------------------------------
 def get_device(provided_device=None):
     if provided_device is None:
         return "cuda" if torch.cuda.is_available() else "cpu"
     return provided_device
 
+
+# -----------------------------------------------------------
+# Load Models
+# -----------------------------------------------------------
 def load_models(binary_path, severity_path, device=None):
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
 
     # ---- Binary model ----
-    binary_model = models.efficientnet_b0(weights=None)  # Do not load pretrained weights
+    binary_model = models.efficientnet_b0(weights=None)
     num_features = binary_model.classifier[1].in_features
     binary_model.classifier = nn.Sequential(
         nn.Dropout(p=0.2),
@@ -33,12 +39,12 @@ def load_models(binary_path, severity_path, device=None):
     binary_model.to(device)
     binary_model.eval()
 
-    # ---- Severity model (example: same structure, adjust if you trained differently) ----
+    # ---- Severity model ----
     severity_model = models.efficientnet_b0(weights=None)
     num_features = severity_model.classifier[1].in_features
     severity_model.classifier = nn.Sequential(
         nn.Dropout(p=0.2),
-        nn.Linear(num_features, 4)  # 4 classes for severity
+        nn.Linear(num_features, 4)
     )
     severity_model.load_state_dict(torch.load(severity_path, map_location=device))
     severity_model.to(device)
@@ -47,163 +53,190 @@ def load_models(binary_path, severity_path, device=None):
     return binary_model, severity_model, device
 
 
+# -----------------------------------------------------------
+# Two-stage Classification Logic
+# -----------------------------------------------------------
 def get_two_stage_prediction(binary_model, severity_model, image_tensor, threshold=0.5):
-    # Ensure models are in eval mode
     binary_model.eval()
     severity_model.eval()
     
     with torch.no_grad():
-        #Stage 1: Binary
         bin_logits = binary_model(image_tensor)
         bin_prob = torch.sigmoid(bin_logits).item()
         
         if bin_prob < threshold:
-            return 0  # No DR
+            return 0
         
-        # Stage 2: Severity
-        # If we are here, the model thinks it IS DR.
-        # Pass the SAME image to the severity model.
         sev_logits = severity_model(image_tensor)
-        _, sev_pred_idx = torch.max(sev_logits, 1) # Returns 0, 1, 2, or 3
+        _, sev_pred_idx = torch.max(sev_logits, 1)
         
-        final_pred = sev_pred_idx.item() + 1 # Convert back to 1, 2, 3, 4
-        
+        final_pred = sev_pred_idx.item() + 1
         return final_pred
 
 
-def predict_single_image(image_path,binary_model,sev_model):
-    """
-    Reads an image file, preprocesses it, and runs the full 2-stage pipeline.
-    """
-    try:
-        # Load and Preprocess 
-        pil_img = preprocess_image(image_path, sigmaX=10)
-        
-        # Transform (Resize -> Tensor -> Normalize)
-        transform = transforms.Compose([
+# -----------------------------------------------------------
+# Prediction Wrapper
+# -----------------------------------------------------------
+def predict_single_image(image_path, binary_model, sev_model):
+    pil_img = preprocess_image(image_path, sigmaX=10)
+
+    transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
     ])
     
-        tensor_img = transform(pil_img).unsqueeze(0).to(device)
-        
-    except Exception as e:
-        return None, f"Error: {e}"
+    tensor_img = transform(pil_img).unsqueeze(0).to(device)
 
-    # Run Pipeline
-    prediction = get_two_stage_prediction(binary_model, sev_model, tensor_img, threshold=0.5)
+    prediction = get_two_stage_prediction(binary_model, sev_model, tensor_img)
     
-    # Map to Text
     labels = {0: 'No DR', 1: 'Mild', 2: 'Moderate', 3: 'Severe', 4: 'Proliferative DR'}
-    return prediction, labels[prediction]
+    return prediction, labels[prediction], tensor_img
 
-#----------------------------------------------------------------------------------------------------------------------
 
-# Page config
+# -----------------------------------------------------------
+# Streamlit UI Configuration
+# -----------------------------------------------------------
 st.set_page_config(
-    page_title="Diabetic Retinopathy Detector",
-    layout="centered",
-    initial_sidebar_state="expanded"
+    page_title="DR Detector",
+    layout="wide",
 )
 
-# Custom CSS for modern look
+# Modern UI CSS ✨
 st.markdown("""
 <style>
-    .big-font { font-size: 52px !important; font-weight: bold; text-align: center; }
-    .result-card { padding: 20px; border-radius: 15px; text-align: center; margin: 20px 0; }
-    .no-dr { background: linear-gradient(90deg, #00ff00, #33ff33); color: black; }
-    .mild { background: linear-gradient(90deg, #99cc00, #ccff33); color: black; }
-    .moderate { background: linear-gradient(90deg, #ffcc00, #ffeb3b); color: black; }
-    .severe { background: linear-gradient(90deg, #ff6600, #ff9800); color: white; }
-    .proliferative { background: linear-gradient(90deg, #ff0000, #ff4444); color: white; }
-    .confidence { font-size: 24px; font-weight: bold; }
+    .title { font-size: 46px; font-weight: 700; text-align: center; padding-top: 10px; }
+    .subtitle { text-align:center; color:#666; margin-top:-10px; }
+
+    .image-box {
+        padding: 10px;
+        border-radius: 12px;
+        background: #fafafa;
+        border: 1px solid #eee;
+    }
+
+    .result-card {
+        padding: 25px;
+        border-radius: 18px;
+        margin-top: 20px;
+        text-align: center;
+        color: white;
+        font-size: 24px;
+        font-weight: 600;
+    }
+
+    .no-dr { background: linear-gradient(90deg, #17e617, #32ff7e); }
+    .mild { background: linear-gradient(90deg, #b4ff4e, #d6ff8f); color: black; }
+    .moderate { background: linear-gradient(90deg, #ffcf4a, #ffe27a); color: black; }
+    .severe { background: linear-gradient(90deg, #ff7a00, #ff9b42); }
+    .proliferative { background: linear-gradient(90deg, #ff2e2e, #ff5c5c); }
+
+    img { border-radius: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
 
-# Title
-st.markdown('<p class="big-font">Diabetic Retinopathy Detector</p>', unsafe_allow_html=True)
-st.markdown("Upload a retinopathy image and get an instant AI diagnosis using a multi classification deep learning model.", unsafe_allow_html=True)
+# -----------------------------------------------------------
+# Header
+# -----------------------------------------------------------
+st.markdown('<p class="title">🔬 Diabetic Retinopathy Detector</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Medical-grade AI analysis with Explainable Heatmaps</p>', unsafe_allow_html=True)
+st.markdown("---")
 
-# Load models once
+
+# -----------------------------------------------------------
+# Load Models Once
+# -----------------------------------------------------------
 @st.cache_resource
 def load_model_once():
-    with st.spinner("Loading AI models..."):
-        binary_model, severity_model, used_device = load_models(
-            binary_path = os.path.join("models", "final_binary_model.pth"),
-            severity_path = os.path.join("models", "final_severity_model.pth"),
-            device=None
-        )
-    return binary_model, severity_model, used_device
+    return load_models(
+        binary_path=r"C:\Users\pc\Desktop\DR_project\models\final_binary_model.pth",
+        severity_path=r"C:\Users\pc\Desktop\DR_project\models\final_severity_model.pth"
+    )
 
 binary_model, severity_model, device = load_model_once()
+lime_explainer = LIME_Explainer(severity_model, device=device)
 
-# File uploader
-uploaded_file = st.file_uploader(
-    "Choose a retinopathy image...",
-    type=["jpg", "jpeg", "png"],
-    help="Supported formats: JPG, JPEG, PNG"
-)
+# -----------------------------------------------------------
+# Uploader
+# -----------------------------------------------------------
+uploaded_file = st.file_uploader("Upload a retinal image", type=["jpg","jpeg","png"])
 
-
-if uploaded_file is not None:
-
+if uploaded_file:
     pil_image = PILImage.open(uploaded_file).convert("RGB")
-    st.image(pil_image, caption="Uploaded Retinal Image", use_column_width=True)
 
-    if st.button("Analyze Image for Diabetic Retinopathy", type="primary"):
-        with st.spinner("Analyzing image... This may take a few seconds."):
+    # Centered small preview
+    st.markdown("### Image Preview")
+    st.write("")
+    st.image(pil_image, width=300)
 
-            # Save uploaded file temporarily because preprocess_image expects a path
-            temp_path = f"temp_uploaded_{uploaded_file.name}"
+    st.write("")
+
+    if st.button("Run Analysis 🔍", type="primary"):
+        with st.spinner("Analyzing image..."):
+            temp_path = f"temp_{uploaded_file.name}"
             pil_image.save(temp_path)
 
-            try:
-                # existing prediction function 
-                pred_id, pred_text = predict_single_image(
-                    temp_path, binary_model, severity_model
-                )
+            pred_id, pred_text, image_tensor = predict_single_image(
+                temp_path, binary_model, severity_model
+            )
 
-                # Clean up temp file
-                os.remove(temp_path)
+            # -------------------- XAI --------------------
+            if pred_id > 0:
+                target_layer = severity_model.features[-1]
+                gradcam = GradCAM(severity_model, target_layer)
+            else:
+                target_layer = binary_model.features[-1]
+                gradcam = GradCAM(binary_model, target_layer)
 
-            except Exception as e:
-                os.remove(temp_path)
-                st.error(f"Error during prediction: {e}")
-                st.stop()
+            heatmap, _ = gradcam(image_tensor)
+            orig, overlay = overlay_heatmap(temp_path, heatmap)
+            img_np = np.array(pil_image.resize((224,224)))
+            lime_img, _ = lime_explainer.explain(img_np)
+    
 
-        # ------------------------------------------------------------------
-        # Beautiful result card
-        # ------------------------------------------------------------------
-        severity_class = pred_text.lower().replace(" ", "-").replace("dr", "")
-        if pred_id is not None:
-            st.markdown(f"""
-            <div class="result-card {severity_class}">
-                <h2>Diagnosis Result</h2>
-                <p class="confidence">{pred_text}</p>
-                <p>Severity Level: {pred_id if pred_id > 0 else 0} 
-                   {"" if pred_id == 0 else f"(Class {pred_id})"}</p>
-            </div>
-            """, unsafe_allow_html=True)
+            os.remove(temp_path)
 
-            # Optional: Add medical advice
-            if pred_id == 0:
-                st.success("Great news! No signs of diabetic retinopathy detected.")
-            elif pred_id == 1:
-                st.warning("Mild NPDR detected. Regular screening recommended.")
-            elif pred_id == 2:
-                st.warning("Moderate NPDR detected. Please consult an ophthalmologist soon.")
-            elif pred_id == 3:
-                st.error("Severe NPDR detected. Urgent specialist referral recommended!")
-            elif pred_id == 4:
-                st.error("Proliferative DR detected. Immediate medical attention required!")
-        else:
-            st.error("Prediction failed. Please try another image.")
+        # -----------------------------------------------------------
+        # Result Card
+        # -----------------------------------------------------------
+        class_map = {
+            0: "no-dr",
+            1: "mild",
+            2: "moderate",
+            3: "severe",
+            4: "proliferative",
+        }
+
+        st.markdown(
+            f'<div class="result-card {class_map[pred_id]}">'
+            f"{pred_text}</div>",
+            unsafe_allow_html=True
+        )
+
+        st.write("")
+
+        # -----------------------------------------------------------
+        # XAI Display (3 columns)
+        # -----------------------------------------------------------
+        st.markdown("### 🔎 Model Explainability")
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.markdown("**Original Image**")
+            st.image(orig, width=260)
+
+        with col2:
+            st.markdown("**Grad-CAM Visualization**")
+            st.image(overlay, width=260)
+
+        with col3:
+            st.markdown("**LIME Visualization**")
+            st.image(lime_img, width=260)
+
+
 # Footer
 st.markdown("---")
 st.markdown(
-    "<p style='text-align:center; color:gray;'>"
-    "Two-stage Deep Learning Model • APTOS 2019 Dataset • Not for clinical use"
-    "</p>",
+    "<p style='text-align:center; color:gray;'>Powered by EfficientNet • Grad-CAM Explainability • APTOS 2019</p>",
     unsafe_allow_html=True
 )
