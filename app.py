@@ -199,18 +199,18 @@ if uploaded_file:
         with col1:
             st.markdown("**Original Image**")
             st.image(orig, width=260)
-            st.markdown('<p class="xai-caption">Original retinal scan for reference</p>', unsafe_allow_html=True)
+            
 
         with col2:
             st.markdown("**Grad-CAM Visualization**")
             st.image(overlay, width=260)
-            st.markdown('<p class="xai-caption">Yellow: highly relevant areas for prediction<br>Blue: less important regions</p>', unsafe_allow_html=True)
+            
 
 
         with col3:
             st.markdown("**LIME Visualization**")
             st.image(lime_img, width=260)
-            st.markdown('<p class="xai-caption">Green: positively contributes to predicted class<br>Red: negatively affects prediction</p>', unsafe_allow_html=True)
+            
 
 
 
