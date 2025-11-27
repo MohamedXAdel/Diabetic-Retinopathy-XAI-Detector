@@ -138,13 +138,36 @@ button[kind="primary"] {
     padding: 0 10px;
 }
 
-/* Make sure the caption stays directly under its image and centered */
-.xai-caption {
-    margin-top: 12px !important;
-    font-size: 0.92rem !important;
-    color: #64748b !important;
-    line-height: 1.5 !important;
+div.row-widget.stHorizontal > div {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+}
+
+/* Force every element inside each column to be centered */
+div.row-widget.stHorizontal > div > div {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
     width: 100% !important;
+}
+
+/* The actual caption text – bulletproof centering */
+.xai-caption {
+    margin-top: 14px !important;
+    font-size: 0.93rem !important;
+    line-height: 1.5 !important;
+    color: #64748b !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 320px !important;   /* prevents super-wide spreading */
+    padding: 0 8px !important;
+}
+
+/* Extra nuclear option – targets the p tag Streamlit generates */
+section[data-testid="stVerticalBlock"] p {
     text-align: center !important;
 }
 
