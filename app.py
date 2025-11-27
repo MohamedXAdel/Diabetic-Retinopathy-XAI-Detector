@@ -158,6 +158,8 @@ lime_explainer = LIME_Explainer(severity_model, device=device)
 # Uploader
 # -----------------------------------------------------------
 uploaded_file = st.file_uploader("Upload a retinal image", type=["jpg","jpeg","png"])
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 if uploaded_file:
     pil_image = PILImage.open(uploaded_file).convert("RGB")
