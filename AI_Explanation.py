@@ -1,4 +1,3 @@
-import google.generativeai as genai
 import io
 import streamlit as st
 import numpy as np
