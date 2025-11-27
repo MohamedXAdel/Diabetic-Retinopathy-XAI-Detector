@@ -102,7 +102,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# Modern UI CSS ✨
+# UI CSS 
 st.markdown("""
 <style>
     .title { font-size: 46px; font-weight: 700; text-align: center; padding-top: 10px; }
@@ -139,7 +139,7 @@ st.markdown("""
 # -----------------------------------------------------------
 # Header
 # -----------------------------------------------------------
-st.markdown('<p class="title">🔬 Diabetic Retinopathy Detector</p>', unsafe_allow_html=True)
+st.markdown('<p class="title">Diabetic Retinopathy Detector</p>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Medical-grade AI analysis with Explainable Heatmaps</p>', unsafe_allow_html=True)
 st.markdown("---")
 
@@ -172,7 +172,7 @@ if uploaded_file:
 
     st.write("")
 
-    if st.button("Run Analysis 🔍", type="primary"):
+    if st.button("Run Analysis", type="primary"):
         with st.spinner("Analyzing image..."):
             temp_path = f"temp_{uploaded_file.name}"
             pil_image.save(temp_path)
