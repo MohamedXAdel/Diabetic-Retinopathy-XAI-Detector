@@ -4,9 +4,12 @@ import base64
 
 
 
-def pil_to_base64(img_pil):
+def pil_to_base64(img):
+    # If input is a NumPy array, convert to PIL
+    if isinstance(img, np.ndarray):
+        img = Image.fromarray(img.astype(np.uint8))
     buffer = io.BytesIO()
-    img_pil.save(buffer, format="JPEG")
+    img.save(buffer, format="JPEG")
     return base64.b64encode(buffer.getvalue()).decode()
 
 
