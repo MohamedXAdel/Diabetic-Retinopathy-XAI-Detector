@@ -118,6 +118,15 @@ st.markdown('<p class="title">🔬 Diabetic Retinopathy Detector</p>', unsafe_al
 st.markdown('<p class="subtitle">AI-powered retinal analysis with explainable visualizations</p>', unsafe_allow_html=True)
 st.markdown("---")
 
+# ---------------------------
+# Session state init
+# ---------------------------
+if "chat_open" not in st.session_state:
+    st.session_state.chat_open = False
+
+if "dr_chat_history" not in st.session_state:
+    st.session_state.dr_chat_history = []
+
 
 # -----------------------------------------------------------
 # Load Models Once
@@ -234,6 +243,29 @@ if uploaded_file:
                 ai_explanation_text = f"Explanation temporarily unavailable.\nError: {str(e)}"
 
             st.write(ai_explanation_text)
+
+
+# Chat Panel (hidden by default)
+display = "block" if st.session_state.chat_open else "none"
+
+with st.container():
+    st.markdown(f"""
+    <div id="chatPanel" class="chat-container" style="display: {display};">
+        <div class="chat-header">
+            Diabetic Retinopathy Assistant
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.session_state.chat_open:
+        with st.container():
+            try:
+                from Chatbot import init_dr_chatbot
+                init_dr_chatbot()
+            except Exception as e:
+                st.error(e)
+    
+
 
 
 # Footer
