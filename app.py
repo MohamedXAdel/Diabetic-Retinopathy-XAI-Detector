@@ -1,9 +1,5 @@
-import glob
-import random
 import os
-import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
 import torch
 from PIL import Image as PILImage
@@ -12,7 +8,7 @@ import torch.nn as nn
 from src.preprocess import preprocess_image
 from Grad_Cam_XAI import GradCAM, overlay_heatmap
 from LIME_XAI import LIME_Explainer
-from AI_Explanation import pil_to_base64,model,prompt
+from AI_Explanation import img_to_part,model,prompt
 
 # -----------------------------------------------------------
 # Device Selection
@@ -217,7 +213,7 @@ if uploaded_file:
         # -----------------------------------------------------------
         # XAI Display (3 columns)
         # -----------------------------------------------------------
-        st.markdown("### 🔎 Model Explainability")
+        st.markdown("### Model Results")
         col1, col2, col3 = st.columns(3)
 
         with col1:
@@ -236,19 +232,23 @@ if uploaded_file:
         # -----------------------------------------------------------
         # AI Explnation 
         # -----------------------------------------------------------
-        original_image_base64 = pil_to_base64(pil_image)
-        gradcam_image_base64 = pil_to_base64(overlay)
-        lime_image_base64 = pil_to_base64(lime_img)
+        st.markdown("### AI Clinical Explanation")
+        with st.spinner("Generating medical explanation..."):
+            try:
+                contents = [
+                    prompt.format(prediction=pred_text),
+                    img_to_part(pil_image),
+                    img_to_part(overlay),
+                    img_to_part(lime_img)
+                ]
 
-        response = model.generate_content([
-            {"text": prompt.format(prediction=pred_text)},
-            {"image": original_image_base64, "description": "Original fundus image"},
-            {"image": gradcam_image_base64, "description": "Grad-CAM heatmap"},
-            {"image": lime_image_base64, "description": "LIME explanation"}
-        ])
-        ai_explanation_text = response.text
-        st.markdown("### 📝 AI Explanation")
-        st.write(ai_explanation_text)
+                response = model.generate_content(contents)
+                ai_explanation_text = response.text
+
+            except Exception as e:
+                ai_explanation_text = f"Explanation temporarily unavailable.\nError: {str(e)}"
+
+            st.write(ai_explanation_text)
 
 
 # Footer
