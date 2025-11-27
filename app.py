@@ -118,15 +118,6 @@ st.markdown('<p class="title">🔬 Diabetic Retinopathy Detector</p>', unsafe_al
 st.markdown('<p class="subtitle">AI-powered retinal analysis with explainable visualizations</p>', unsafe_allow_html=True)
 st.markdown("---")
 
-# ---------------------------
-# Session state init
-# ---------------------------
-if "chat_open" not in st.session_state:
-    st.session_state.chat_open = False
-
-if "dr_chat_history" not in st.session_state:
-    st.session_state.dr_chat_history = []
-
 
 # -----------------------------------------------------------
 # Load Models Once
@@ -244,50 +235,6 @@ if uploaded_file:
 
             st.write(ai_explanation_text)
 
-
-# Chat Panel 
-# Initialize session state
-# Initialize chat state
-if "chat_open" not in st.session_state:
-    st.session_state.chat_open = False
-
-# Use a single placeholder at the very end to avoid layout shift
-chat_placeholder = st.empty()
-
-with chat_placeholder.container():
-    # Floating Button (always visible unless chat is open)
-    if not st.session_state.chat_open:
-        st.markdown("""
-        <div class="chat-fab" title="Ask Medical Assistant">
-            💬
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Invisible real button behind the FAB
-        if st.button("Open Chat", key="open_fab_real", use_container_width=False):
-            st.session_state.chat_open = True
-            st.rerun()
-
-    # Chat Modal
-    if st.session_state.chat_open:
-        st.markdown("""
-        <div class="chat-modal">
-            <div class="chat-box">
-                <button class="close-btn" title="Close">✕</button>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Real close button (hidden but works)
-        col_close1, col_close2 = st.columns([8, 1])
-        with col_close2:
-            if st.button("✕", key="close_modal_btn", help="Close chat"):
-                st.session_state.chat_open = False
-                st.rerun()
-
-        # Import and run your chatbot
-        from Chatbot import init_dr_chatbot
-        init_dr_chatbot()
 
 # Footer
 st.markdown("---")
