@@ -3,6 +3,7 @@ import torch
 from torchvision.transforms.functional import normalize
 from lime import lime_image
 from skimage.segmentation import mark_boundaries
+from src.preprocess import preprocess_image
 
 
 class LIME_Explainer:
@@ -29,7 +30,7 @@ class LIME_Explainer:
 
         # Apply normalization like validation transforms
         images = (images / 255.0)
-        images = normalize(images, [0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        images = preprocess_image(images, sigmaX=10)
 
 
         with torch.no_grad():
