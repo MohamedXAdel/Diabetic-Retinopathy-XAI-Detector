@@ -95,50 +95,27 @@ def predict_single_image(image_path, binary_model, sev_model):
 # -----------------------------------------------------------
 # Streamlit UI Configuration
 # -----------------------------------------------------------
-st.set_page_config(
-    page_title="DR Detector",
-    layout="wide",
-)
-
 # UI CSS 
-st.markdown("""
-<style>
-    .title { font-size: 46px; font-weight: 700; text-align: center; padding-top: 10px; }
-    .subtitle { text-align:center; color:#666; margin-top:-10px; }
+def local_css(file_name):
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # folder where app.py is
+    css_path = os.path.join(base_dir, file_name)
+    with open(css_path) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-    .image-box {
-        padding: 10px;
-        border-radius: 12px;
-        background: #fafafa;
-        border: 1px solid #eee;
-    }
+# Load CSS from assets folder
+local_css("assets/style.css")
 
-    .result-card {
-        padding: 25px;
-        border-radius: 18px;
-        margin-top: 20px;
-        text-align: center;
-        color: white;
-        font-size: 24px;
-        font-weight: 600;
-    }
-
-    .no-dr { background: linear-gradient(90deg, #17e617, #32ff7e); }
-    .mild { background: linear-gradient(90deg, #b4ff4e, #d6ff8f); color: black; }
-    .moderate { background: linear-gradient(90deg, #ffcf4a, #ffe27a); color: black; }
-    .severe { background: linear-gradient(90deg, #ff7a00, #ff9b42); }
-    .proliferative { background: linear-gradient(90deg, #ff2e2e, #ff5c5c); }
-
-    img { border-radius: 10px; }
-</style>
-""", unsafe_allow_html=True)
 
 
 # -----------------------------------------------------------
 # Header
 # -----------------------------------------------------------
-st.markdown('<p class="title">Diabetic Retinopathy Detector</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Medical-grade AI analysis with Explainable Heatmaps</p>', unsafe_allow_html=True)
+st.set_page_config(
+    page_title="DR Detector",
+    layout="wide",
+)
+st.markdown('<p class="title">🔬 Diabetic Retinopathy Detector</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">AI-powered retinal analysis with explainable visualizations</p>', unsafe_allow_html=True)
 st.markdown("---")
 
 
@@ -222,14 +199,19 @@ if uploaded_file:
         with col1:
             st.markdown("**Original Image**")
             st.image(orig, width=260)
+            st.markdown('<p class="xai-caption">Original retinal scan for reference</p>', unsafe_allow_html=True)
 
         with col2:
             st.markdown("**Grad-CAM Visualization**")
             st.image(overlay, width=260)
+            st.markdown('<p class="xai-caption">Yellow: highly relevant areas for prediction<br>Blue: less important regions</p>', unsafe_allow_html=True)
+
 
         with col3:
             st.markdown("**LIME Visualization**")
             st.image(lime_img, width=260)
+            st.markdown('<p class="xai-caption">Green: positively contributes to predicted class<br>Red: negatively affects prediction</p>', unsafe_allow_html=True)
+
 
 
         # -----------------------------------------------------------
