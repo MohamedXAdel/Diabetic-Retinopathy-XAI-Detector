@@ -11,5 +11,4 @@ pillow
 streamlit  
 lime
 google-generativeai
-langchain-google-genai==1.0.8
-langchain-core==0.2.38
+
