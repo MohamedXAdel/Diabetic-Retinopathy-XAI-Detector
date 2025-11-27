@@ -36,7 +36,11 @@ class LIME_Explainer:
         with torch.no_grad():
             logits = self.model(images)
 
-        probs = torch.softmax(logits, dim=1).cpu().numpy()
+        if logits.shape[1] == 1:
+            probs = torch.sigmoid(logits)
+            probs = torch.cat([1 - probs, probs], dim=1)
+        else:
+            probs = torch.softmax(logits, dim=1)
         return probs
 
     def explain(self, image_np, top_label=None, num_samples=1000):
