@@ -1,12 +1,11 @@
 torch==2.0.1  
 torchvision==0.15.2
 pandas
-numpy
+numpy==1.26.4
 matplotlib
 seaborn
-opencv-python  
+opencv-python-headless==4.8.1.78
 scikit-learn 
 tqdm
-pillow
-lime 
-flask  
+pillow 
+streamlit  
