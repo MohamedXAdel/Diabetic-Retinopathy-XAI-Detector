@@ -246,61 +246,48 @@ if uploaded_file:
 
 
 # Chat Panel 
-def show_chatbot():
-    from Chatbot import init_dr_chatbot
-    init_dr_chatbot()
+# Initialize session state
+# Initialize chat state
+if "chat_open" not in st.session_state:
+    st.session_state.chat_open = False
 
-# Custom HTML + CSS for floating button
-floating_button_html = """
-<div class="chatbot-fab" id="chatbot-fab">
-    💬
-</div>
+# Use a single placeholder at the very end to avoid layout shift
+chat_placeholder = st.empty()
 
-<script>
-    const fab = document.getElementById('chatbot-fab');
-    fab.addEventListener('click', () => {
-        // This triggers Streamlit to rerun and open the chatbot
-        Streamlit.setComponentValue(true);
-    });
-</script>
-"""   
+with chat_placeholder.container():
+    # Floating Button (always visible unless chat is open)
+    if not st.session_state.chat_open:
+        st.markdown("""
+        <div class="chat-fab" title="Ask Medical Assistant">
+            💬
+        </div>
+        """, unsafe_allow_html=True)
 
-if "open_chatbot" not in st.session_state:
-    st.session_state.open_chatbot = False
+        # Invisible real button behind the FAB
+        if st.button("Open Chat", key="open_fab_real", use_container_width=False):
+            st.session_state.chat_open = True
+            st.rerun()
 
-# Render the floating button
-chat_trigger = st.components.v1.html(
-    floating_button_html,
-    height=0,
-    width=0
-)
-
-# Detect click via component return value or session state
-if chat_trigger or st.session_state.open_chatbot:
-    st.session_state.open_chatbot = True  # Keep it open once clicked
-
-# Show the chatbot in a modal-like container when opened
-if st.session_state.open_chatbot:
-    with st.container():
+    # Chat Modal
+    if st.session_state.chat_open:
         st.markdown("""
         <div class="chat-modal">
             <div class="chat-box">
-                <button class="close-btn" onclick="document.getElementById('close-chat').click()">✕</button>
+                <button class="close-btn" title="Close">✕</button>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        # Hidden button to close via JS
-        if st.button("Close Chat", key="close_chat_hidden", on_click=lambda: st.session_state.update(open_chatbot=False)):
-            pass
+        # Real close button (hidden but works)
+        col_close1, col_close2 = st.columns([8, 1])
+        with col_close2:
+            if st.button("✕", key="close_modal_btn", help="Close chat"):
+                st.session_state.chat_open = False
+                st.rerun()
 
-        # show the chatbot inside the modal
-        st.markdown("<div style='padding: 20px; height: 100%;'>", unsafe_allow_html=True)
-        show_chatbot()
-        st.markdown("</div>", unsafe_allow_html=True)
-
-
-
+        # Import and run your chatbot
+        from Chatbot import init_dr_chatbot
+        init_dr_chatbot()
 
 # Footer
 st.markdown("---")
