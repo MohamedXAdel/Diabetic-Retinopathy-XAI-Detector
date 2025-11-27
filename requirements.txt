@@ -7,5 +7,6 @@ seaborn
 opencv-python  
 scikit-learn 
 tqdm
-pillow 
+pillow
+lime 
 flask  
