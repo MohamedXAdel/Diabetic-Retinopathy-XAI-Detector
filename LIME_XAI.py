@@ -29,8 +29,19 @@ class LIME_Explainer:
         images = torch.tensor(images, dtype=torch.float32).to(self.device)
 
         # Apply normalization like validation transforms
-        images = (images / 255.0)
-        images = preprocess_image(images, sigmaX=10)
+        images = np.transpose(images, (0, 3, 1, 2)) 
+        images = torch.tensor(images, dtype=torch.float32, device=self.device)
+
+        # scale to [0,1]
+        images = images / 255.0
+        
+        # normalization
+        images = normalize(
+            images,
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+        )
+
 
 
         with torch.no_grad():
