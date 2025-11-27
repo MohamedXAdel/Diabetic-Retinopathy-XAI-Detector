@@ -128,12 +128,41 @@ button[kind="primary"] {
     border-radius: 14px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.08);
 }
-.xai-caption {
+
+/* Force each column to behave like a proper card with centered content */
+.css-1cpxl2t > div[data-testid="column"] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
-    color: #64748b;
-    font-size: 0.9rem;
-    margin-top: 0.5rem;
+    padding: 0 10px;
 }
 
+/* Make sure the caption stays directly under its image and centered */
+.xai-caption {
+    margin-top: 12px !important;
+    font-size: 0.92rem !important;
+    color: #64748b !important;
+    line-height: 1.5 !important;
+    width: 100% !important;
+    text-align: center !important;
+}
+
+/* Extra safety: target Streamlit's inner divs that sometimes break centering */
+div[data-testid="column"] > div > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* On very wide screens, limit max width so captions don't spread too far */
+@media (min-width: 992px) {
+    .css-1cpxl2t > div[data-testid="column"] {
+        max-width: 360px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
 /* Footer */
 p[style*="text-align:center"] { color: #94a3b8 !important; }
