@@ -25,6 +25,7 @@ def get_device(provided_device=None):
 # -----------------------------------------------------------
 # Load Models
 # -----------------------------------------------------------
+base_dir = os.path.dirname(os.path.abspath(__file__))
 def load_models(binary_path, severity_path, device=None):
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -149,7 +150,6 @@ st.markdown("---")
 @st.cache_resource
 def load_model_once():
     return load_models(
-        base_dir = os.path.dirname(os.path.abspath(__file__)),
         binary_path = os.path.join(base_dir, "models", "final_binary_model.pth"),
         severity_path = os.path.join(base_dir, "models", "final_severity_model.pth")
     )
