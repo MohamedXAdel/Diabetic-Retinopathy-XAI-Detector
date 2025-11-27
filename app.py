@@ -8,7 +8,7 @@ import torch.nn as nn
 from src.preprocess import preprocess_image
 from Grad_Cam_XAI import GradCAM, overlay_heatmap
 from LIME_XAI import LIME_Explainer
-from AI_Explanation import img_to_part,model,prompt
+from AI_Explanation import img_to_part,prompt
 
 # -----------------------------------------------------------
 # Device Selection
