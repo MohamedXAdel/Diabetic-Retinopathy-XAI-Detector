@@ -9,3 +9,4 @@ scikit-learn
 tqdm
 pillow 
 streamlit  
+lime
